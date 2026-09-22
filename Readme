@@ -1,1 +1,38 @@
+## Traducción a Python
 
+Se tradujeron los tres programas de C++ a Python, manteniendo el mismo
+algoritmo y el mismo patrón de sincronización pedido en el enunciado
+(despacho dinámico de bloques con mutex):
+
+| C++ | Python | Cambio principal |
+|---|---|---|
+| `secuencial.cpp` | `secuencial.py` | `std::chrono` → `time.perf_counter()` |
+| `paralelo.cpp` | `paralelo.py` | `std::mutex` → `threading.Lock`, `std::thread` → `threading.Thread` |
+| `benchmark.cpp` | `benchmark.py` | `hardware_concurrency()` → `os.cpu_count()`, mediana con `statistics.median` |
+
+### Resultado y por qué difiere de C++
+
+La traducción es fiel línea a línea, pero el comportamiento **no** es
+el mismo: en C++, más hilos dan speedup real porque los hilos del
+sistema operativo corren en paralelo sobre distintos núcleos. En
+CPython, el **GIL (Global Interpreter Lock)** permite que un solo
+hilo ejecute bytecode Python a la vez, sin importar cuántos hilos se
+creen. Como sumar un vector con un `for` puro en Python es trabajo
+CPU-bound (no libera el GIL, a diferencia de I/O), `paralelo.py`
+**no gana velocidad con más hilos** — de hecho suele medir un
+speedup menor a 1 (más lento que `secuencial.py`) por el overhead de
+crear y sincronizar hilos que nunca corren realmente en paralelo.
+
+Para lograr paralelismo real en Python se agregó
+`paralelo_multiprocessing.py`, que usa `multiprocessing.Pool` en vez
+de `threading`: cada proceso tiene su propio intérprete (y su propio
+GIL), así que el trabajo sí se distribuye entre núcleos. El costo es
+que ya no hay memoria compartida "gratis" como en C++, así que en vez
+de repartir trabajo dinámicamente con un mutex compartido, el vector
+se particiona estáticamente en T bloques antes de lanzar los procesos.
+
+**Conclusión para el informe:** la comparación C++ vs. Python
+(threading) vs. Python (multiprocessing) sirve para mostrar que la
+elección de la primitiva de concurrencia importa tanto como el
+algoritmo: el mismo patrón de sincronización que funciona en C++ no
+alcanza en Python por una limitación del intérprete, no del diseño.
