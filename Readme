@@ -1,4 +1,4 @@
-## Traducción a Python
+##Traducción a Python
 
 Se tradujeron los tres programas de C++ a Python, manteniendo el mismo
 algoritmo y el mismo patrón de sincronización pedido en el enunciado
@@ -10,7 +10,7 @@ algoritmo y el mismo patrón de sincronización pedido en el enunciado
 | `paralelo.cpp` | `paralelo.py` | `std::mutex` → `threading.Lock`, `std::thread` → `threading.Thread` |
 | `benchmark.cpp` | `benchmark.py` | `hardware_concurrency()` → `os.cpu_count()`, mediana con `statistics.median` |
 
-### Resultado y por qué difiere de C++
+###Resultado y por qué difiere de C++
 
 La traducción es fiel línea a línea, pero el comportamiento **no** es
 el mismo: en C++, más hilos dan speedup real porque los hilos del
